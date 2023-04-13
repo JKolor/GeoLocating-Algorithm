@@ -152,8 +152,8 @@ history = model.fit(ds_train,
 # Save the complete model including its wieghts to a desired path in your google drive directory
 model.save('/content/drive/MyDrive/Geo-Locating Project/CurrentModel')
 
-# After training graph the difference in accuracy and loss between training and validation
-# Define 4 variables which will contains the accuracy and loss history for the training and validation datasets.
+# After training, graph the difference in accuracy and loss between training and validation
+# Define 4 variables which will contain the accuracy and loss history for the training and validation datasets.
 acc = history.history['accuracy']
 val_acc = history.history['val_accuracy']
 loss = history.history['loss']
@@ -168,7 +168,7 @@ plt.legend(loc='lower right')
 plt.ylabel('Accuracy')
 plt.ylim([min(plt.ylim()),0.4])
 plt.title('Training and Validation Accuracy')
-# Plot the loss graph which will compare between the model's accuracy on the training and validation datasets.
+# Plot the loss graph which will compare between the model's Loss on the training and validation datasets.
 plt.subplot(2, 1, 2)
 plt.plot(loss, label='Training Loss')
 plt.plot(val_loss, label='Validation Loss')
