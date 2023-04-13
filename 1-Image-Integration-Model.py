@@ -69,7 +69,117 @@ for images, labels in ds_train.take(1):
 print('Number of train batches: %d' % tf.data.experimental.cardinality(ds_train))
 
 # Prefetch all datasets in order for the training and testing faze to be more efficient
-AUTOTUNE = tf.data.AUTOTUNE
+AUTOTUNE = tf.data.AUTOTUNE # tunes the buffer size dynamically at runtime
 ds_train = ds_train.prefetch(buffer_size=AUTOTUNE)
 ds_test = ds_test.prefetch(buffer_size=AUTOTUNE)
 ds_val = ds_val.prefetch(buffer_size=AUTOTUNE)
+
+# Make the resnet preprocessing layer which will be used to modify the dataset's image according to the resnet model's needs.
+preprocess_input = tf.keras.applications.resnet.preprocess_input
+
+# DownLoad the RESNET50 model which will be used as the convolutional part of the network.
+IMG_SHAPE = (256,256) + (3,)  # Set desired image shape
+base_model = tf.keras.applications.ResNet50(input_shape=IMG_SHAPE,
+                                               include_top=False,
+                                               weights='imagenet')
+
+# Define the Resnet50 model as untrainable so that the training faze wouldn't take place for a long duration.
+base_model.trainable = False
+
+# See the shape of the batch of images after the go through the ResNet50
+image_batch, label_batch = next(iter(ds_train))
+feature_batch = base_model(image_batch) # ResNet50 output
+print(feature_batch.shape)
+
+# Print the base model's architecture - ResNet50's architecture
+print(base_model.summary())
+
+# Define "global_average_layer" as the Global Average Pooling Layer which will make a vector out of each convolutionized image
+global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
+# See what will be the shape of a batch of the images after it goes through the Global Average Layer
+feature_batch_average = global_average_layer(feature_batch)
+print(feature_batch_average.shape)
+
+# Make a 50 node prediction dense layer which will be used to predict and classify each image at the end of the network
+prediction_layer = tf.keras.layers.Dense(50)
+# See what will be the shape of the output of the final model after it gets a batch of images as input
+prediction_batch = prediction_layer(feature_batch_average)
+print(prediction_batch.shape)
+
+# Assmble all parts of the model including: Input layer, Preprocessing Layer, Base Model, Global Average Layer, Dropout Layer, Output Layer
+inputs = tf.keras.Input(shape=(256, 256, 3))  # Set an input layer with a desired image input shape
+x = preprocess_input(inputs)
+x = base_model(x, training=False)
+x = global_average_layer(x)
+x = tf.keras.layers.Dropout(0.05)(x)  # Set a dropout layer after the GA layer to deal with overfit.
+outputs = prediction_layer(x)
+model = tf.keras.Model(inputs, outputs) # Finalize the model
+
+# Compile the model: set a base learning rate (0.0001), optimizer (Adam), loss function (Sparse Catagorical Cross Entropy), and metrics.
+base_learning_rate = 0.0001
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
+              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              metrics=['accuracy'])
+
+# Set a callback which saves the model weights to a specific path on the user's google drive
+checkpoint_path = "/content/drive/MyDrive/Geo-Locating Project/cp_single_image.ckpt" 
+checkpoint_dir = os.path.dirname(checkpoint_path) # Set the chekpoint's dir
+cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
+                                                 save_weights_only=True,
+                                                 verbose=1)
+
+"""
+Load the previously trained model's weights if you desire to do some testing or continue training from your last training faze.
+os.listdir(checkpoint_dir)
+latest = tf.train.latest_checkpoint(checkpoint_dir)
+model.load(latest)
+
+Or load the entire model (which was saved on your drive) including its architecture.
+model = tf.keras.models.load_model("/content/drive/MyDrive/Geo-Locating Project/CurrentModel")
+"""
+
+# See the finalized architecture of the deep neural network
+model.summary()
+
+# train the model and set a training dataset, amount of epochs, validation dataset, callbacks.
+initial_epochs = 8
+history = model.fit(ds_train,
+                    epochs=initial_epochs,
+                    validation_data = ds_val,
+                    callbacks=cp_callback)
+
+# Save the complete model including its wieghts to a desired path in your google drive directory
+model.save('/content/drive/MyDrive/Geo-Locating Project/CurrentModel')
+
+# After training graph the difference in accuracy and loss between training and validation
+# Define 4 variables which will contains the accuracy and loss history for the training and validation datasets.
+acc = history.history['accuracy']
+val_acc = history.history['val_accuracy']
+loss = history.history['loss']
+val_loss = history.history['val_loss']
+# Set a canvas size which will contain both graphs
+plt.figure(figsize=(8, 8))
+# Plot the accuracy graph which will comapre between the model's accuracy on the training and validation datasets.
+plt.subplot(2, 1, 1)
+plt.plot(acc, label='Training Accuracy')
+plt.plot(val_acc, label='Validation Accuracy')
+plt.legend(loc='lower right')
+plt.ylabel('Accuracy')
+plt.ylim([min(plt.ylim()),0.4])
+plt.title('Training and Validation Accuracy')
+# Plot the loss graph which will compare between the model's accuracy on the training and validation datasets.
+plt.subplot(2, 1, 2)
+plt.plot(loss, label='Training Loss')
+plt.plot(val_loss, label='Validation Loss')
+plt.legend(loc='upper right')
+plt.ylabel('Cross Entropy')
+plt.ylim([0,4])
+plt.title('Training and Validation Loss')
+plt.xlabel('epoch')
+# Display both graphs.
+plt.show()
+
+#calculate accuracy on the training dataset
+evaluations = model.evaluate(ds_val)
+evaluations
+
