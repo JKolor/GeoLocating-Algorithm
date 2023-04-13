@@ -179,7 +179,95 @@ plt.xlabel('epoch')
 # Display both graphs.
 plt.show()
 
-#calculate accuracy on the training dataset
-evaluations = model.evaluate(ds_val)
-evaluations
+# Calculate accuracy and loss on the training dataset using the model.evaluate method and then print both.
+evaluations = model.evaluate(ds_test)
+print(f"Accuracy: {str(evaluations[1]*100)[:5]}%\nLoss: {str(evaluations[0])[:4]}")
 
+# Get a batch from the test dataset and let the model perform a prediction on it
+image_batch, label_batch = ds_test.as_numpy_iterator().next()
+output = model.predict_on_batch(image_batch)
+print(output.shape)
+
+# Import pandas which is a library used for creating a dataframe
+import pandas as pd
+# Create a pandas dataframe which include the 2 letter name of each state in an alphabetical order.
+states = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", 
+          "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", 
+          "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", 
+          "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", 
+          "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
+df = pd.DataFrame(states, columns = ['State'])  # Set the states list as the first column
+df['Chances'] = output[0] # Set the ouput values of the first image in the batch as the second column
+
+# Print the first five rows of the dataframe to see if everything is optimal.
+df.head()
+
+# Use plotly express to output a heat map of the US according to the dataframe - the more red the state the more likely the photo was taken there
+import plotly.express as px
+fig = px.choropleth(df,
+                    locations='State', 
+                    locationmode="USA-states", 
+                    scope="usa",
+                    color='Chances',
+                    color_continuous_scale="OrRd",
+                    )
+fig.show()
+
+# Show the predicted picture along with what state the model predicted and its actal state.
+index = df['Chances'].idxmax()  # define index as the index of the predicted state
+image, label = image_batch[0], label_batch[0] # define image as the predicted image and label as the index of the actual state.
+plt.figure(figsize=(25, 25))
+ax = plt.subplot(3, 3, 0 + 1)
+plt.imshow(image.astype("uint8"))
+plt.title(f"Predicted: {class_names[index]} ||  Actual: {class_names[label]}")
+plt.axis("off")
+
+# Draw a label graph where each states accuracy is given
+# Create a new dataframe which will consist of the state's name as well as the model's accuracy for each state
+accuracy_df = pd.DataFrame(states, columns = ['State'])
+# Set the test dataset as none shuffled so that we will be able to itirate over it and the model's predictions on it.
+ds_test = tf.keras.utils.image_dataset_from_directory(test_dir,
+                                                            shuffle=False,
+                                                            batch_size=BATCH_SIZE,
+                                                            image_size=IMG_SIZE)
+
+# Let the model predict on the test dataset and turn the output to a list
+predictions = model.predict(ds_test)
+predictions = list(predictions)
+
+# Set 3 variables in order to calculate the accuracy of the model: count, accuracy list, amount list.
+count = 0
+accuracy_list = [0] * 50  # A list 50 cells long. Each cells represents a different state. Contains the number of correct guesses for each state.
+amount_list = [0] * 50  # A list 50 cells long. Each cells represents a different state. Contains the number of guesses for each state.
+# The following nested loop, iterates over each label in each batch in the test dataset and checks if the model's prediction are correct.
+for image_batch, label_batch in ds_test:
+  for label in label_batch:
+    prediction_index = list(predictions[count]).index(max(predictions[count]))
+    print(f"prediction: {prediction_index} -> actual: {label}")
+    if (label == prediction_index):
+      accuracy_list[label] += 1 # Update the correct guess list
+    amount_list[label] += 1 # Update the guess list 
+    count += 1
+
+# Create a list with 50 cells which will contain the model's accuracy for each state.
+precentage_list = [0] * 50
+# Iterate of the accuracy_list and calculate the model's accuracy for each state.
+for i in range(len(accuracy_list)):
+  precentage_list[i] = (accuracy_list[i]/amount_list[i]) * 100
+# Add the precentage list as a column to the accuracy dataframe.
+accuracy_df['Accuracy'] = precentage_list
+# Sort the dataframe so the graph will be presentable.
+accuracy_df_sorted = accuracy_df.sort_values(by=['Accuracy'])
+
+# Plot and print the actual label graph
+ax = accuracy_df_sorted.plot.bar(x='State', y='Accuracy', rot=0, figsize=(20,8))
+
+# Use plotly express to output a heat map of the US according to the model's accuracy - the more yellow the state the higher the model's accuracy on it.
+fig = px.choropleth(accuracy_df,
+                    locations='State', 
+                    locationmode="USA-states", 
+                    scope="usa",
+                    color='Accuracy',
+                    color_continuous_scale="Plasma",
+                    )
+fig.show()
