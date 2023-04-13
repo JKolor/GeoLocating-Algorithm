@@ -116,6 +116,7 @@ outputs = prediction_layer(x)
 model = tf.keras.Model(inputs, outputs) # Finalize the model
 
 # Compile the model: set a base learning rate (0.0001), optimizer (Adam), loss function (Sparse Catagorical Cross Entropy), and metrics.
+# The "from_logits" is set to "True" since the activation function of the prediction layer is linear and so it needs to be converted to softmax.
 base_learning_rate = 0.0001
 model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
