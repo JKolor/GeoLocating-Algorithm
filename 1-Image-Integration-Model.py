@@ -2,10 +2,10 @@
 This python file contains the code for my 1 image classification deep learning model.
 The code was imported from a google cloab notebook.
 The file contains the following sections of code:
-- Dataset Preparation
-- Building The Model
-- Training The Model On Dataset
-- Performance Evaluation of The Model which includes graphing the results
+-> Dataset Preparation - line 21
+-> Building The Model - line 77
+-> Training The Model On Dataset - line 118
+-> Performance Evaluation of the model which includes graphing the results - line 154
 """
 
 # import necessary libraries
