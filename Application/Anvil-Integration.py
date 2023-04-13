@@ -240,7 +240,7 @@ def classify_image(file):
 
 """
 The function "predict_geoguessr" is a function which can be called externally by the anvil application and return variables to the app via the Anvil Server.
-The function is used for the "GeoGuessr" window of the application, in which the user pastes the URL of a geoguessr game and lets the app guess the user's location.
+The function is used for the "GeoGuessr" window of the application, in which the user enters the URL of a geoguessr game and lets the app guess the user's location.
 
 The function get the GeoGuessr game URL as an argument.
 The function then activates a driver to open the GeoGuessr map via Google Chrome.
