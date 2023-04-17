@@ -1,5 +1,6 @@
 # GeoLocating-Algorithm
 This repository contains the code, along with the code description for my attempt at creating 2 algorithms which are able to predict where an image was taken using Deep Learning.
+The project was implemented using Google Colab and the Anvil Web App client.
 The whole project consists of 2 deep learning models as well as a web app which uses both of them. The web App gives the user the ability to do two things:
 - Upload an image and get the app's prediction regarding in which US state an image was taken (uses the "1-image-integration-model").
 - Type of paste a link to a game of GeoGuessr and get the app's prediction regarding in which US state the user is in (uses the "4-image-integration-model").
