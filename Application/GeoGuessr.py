@@ -4,7 +4,7 @@ In this window the user can type or paste a link of a GeoGuessr game and get the
 The GeoGuessr class contains two interactive elements:
 - a text box used for pasting the link
 - a prediction button
-The application contains additional elements which are defined via the Anvil website and can be refrenced in order to add information to the website:
+The application class contains additional elements which are defined via the Anvil website and can be refrenced in order to add information to the website:
 -> results_label is a label which will contain the App top three state predictions
 -> image_1 is an element which will display the 4 images taken by the external notebook during prediction
 -> image_2 is an element which will display the heat map returen by the external notebook post prediction
@@ -17,6 +17,7 @@ import anvil.server
 
 # Create the GeoGuessr class which will be able to get refrenced in other classes and gets the design template as a parameter.
 class GeoGuessr(GeoGuessrTemplate):
+  
   # Take the properties from the GeoGuessr Design Template and implement them into the website with the __init__ constructor function.
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
