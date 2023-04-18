@@ -22,6 +22,7 @@ class ImageGuessr(ImageGuessrTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
+    self.file_passed = False # Sets the "file_pass" variable to False to indicate that an image has not been uploaded by the user.
 
   # The function "file_loader_1_change" is called whenever a file is uploaded to the fileloader and it gets the file as an argument.
   def file_loader_1_change(self, file, **event_args):
