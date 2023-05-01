@@ -16,3 +16,6 @@ The "Application" folder contains the code implementaion of the Anvil Web App:
   - "Main" contains the code for the Main class of the Anvil App.
   - "GeoGuessr" contains the code for the GeoGuessr class of the Anvil App.
   - "ImageGuessr" contains the code for the ImageGuessr class of the Anvil App.
+
+In order to create a copy of the App on Anvil Works, which includes its design, Please you the following link:
+- https://anvil.works/build#clone:VEPM2TD6F6IP5H4Z=QVA3Z37FRFAPOQXFTSWQDWG5
